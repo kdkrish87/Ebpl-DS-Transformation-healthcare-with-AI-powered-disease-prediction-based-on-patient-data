@@ -1,0 +1,92 @@
+!pip install gradio
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+from google.colab import files
+uploaded = files.upload()
+df = pd.read_csv("diabetes.csv")
+print(df.head())
+print(df.info())
+print(df.describe())
+# Correlation heatmap
+plt.figure(figsize=(8,6))
+sns.heatmap(df.corr(), annot=True, cmap="coolwarm")
+plt.title("Feature Correlation Heatmap")
+plt.show()
+df = pd.read_csv("diabetes.csv")
+X = df[['Age', 'Glucose', 'BloodPressure']]  
+y = df['BMI']                            
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+print("Training features:\n", X_train)
+print("Test features:\n", X_test)
+print("Training labels:\n", y_train)
+print("Test labels:\n", y_test)
+# Train logistic regression model
+log_model = LogisticRegression(max_iter=1000)
+log_model.fit(X_train, y_train)
+# Predict
+log_preds = log_model.predict(X_test)
+# Evaluate
+print("Logistic Regression Accuracy:", accuracy_score(y_test, log_preds))
+print("Classification Report:\n", classification_report(y_test, log_preds))
+rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+rf_model.fit(X_train, y_train)
+rf_preds = rf_model.predict(X_test)
+print("Random Forest Accuracy:", accuracy_score(y_test, rf_preds))
+print("Classification Report:\n", classification_report(y_test, rf_preds))
+# Predict on test data
+y_pred = model.predict(X_test)
+# Logistic Regression Confusion Matrix
+sns.heatmap(confusion_matrix(y_test, log_preds), annot=True, fmt='d', cmap='Blues')
+plt.title("Logistic Regression Confusion Matrix")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.show()
+# Random Forest Confusion Matrix
+sns.heatmap(confusion_matrix(y_test, rf_preds), annot=True, fmt='d', cmap='Greens')
+plt.title("Random Forest Confusion Matrix")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.show()
+
+import gradio as gr
+import numpy as np
+from sklearn.linear_model import LogisticRegression
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+# Sample data and model (for demo purposes)
+X, y = make_classification(n_samples=500, n_features=5, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+model = LogisticRegression()
+model.fit(X_train, y_train)
+# Prediction function
+def predict_health_risk(age, gender, bmi, blood_pressure, glucose):
+    gender_val = 1 if gender == "Male" else 0
+    features = np.array([[age, gender_val, bmi, blood_pressure, glucose]])
+    pred = model.predict(features)[0]
+    return "High Risk" if pred == 1 else "Low Risk"
+# Gradio Interface
+iface = gr.Interface(
+    fn=predict_health_risk,
+    inputs=[
+        gr.Number(label="Age"),
+        gr.Radio(["Male", "Female"], label="Gender"),
+        gr.Number(label="BMI"),
+        gr.Number(label="BloodPressure"),
+        gr.Number(label="Glucose"),
+    ],
+    outputs=gr.Text(label="Risk Prediction"),
+    title="AI-Powered Health Risk Predictor",
+    description="Enter patient details to predict health risk using AI.",
+    theme="default"
+)
+
+# Launch app
+iface.launch()
+
